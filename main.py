@@ -68,7 +68,8 @@ async def on_message(message: discord.Message):
 
 def convert_all_urls(message_content: str) -> list[str]:
     new_urls: list[str] = []
-    url_conversions: list[dict] = [{
+    url_conversions: list[dict] = [
+        {
             'url_pattern': r'https?://([\w\-]+\.)*tiktok\.com/([\w\-./?=&]+)',
             'new_domain': 'vxtiktok.com'
         },
@@ -84,6 +85,7 @@ def convert_all_urls(message_content: str) -> list[str]:
             'url_pattern': r'https?://([\w\-]+\.)*twitter\.com/([\w\-./?=&]+)',
             'new_domain': 'vxtwitter.com'
         }
+        # TODO check on adding vxReddit (currently broken by Discord)
     ]
     for url_conversion in url_conversions:
         new_urls.extend(convert_url(message_content=message_content, **url_conversion))
@@ -124,4 +126,4 @@ async def disable(ctx: discord.ext.commands.Context):
         await ctx.respond('Link conversion disabled', ephemeral=True)
 
 
-bot.run(os.getenv('DISCORD_TOKEN'))
+bot.run(TOKEN)
