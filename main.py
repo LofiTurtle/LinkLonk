@@ -70,19 +70,19 @@ def convert_all_urls(message_content: str) -> list[str]:
     new_urls: list[str] = []
     url_conversions: list[dict] = [
         {
-            'url_pattern': r'https?://([\w\-]+\.)*tiktok\.com/([\w\-./?=&]+)',
+            'url_pattern': r'https?://([\w\-]+\.)*tiktok\.com/([^\s]*)',
             'new_domain': 'vxtiktok.com'
         },
         {
-            'url_pattern': r'https?://([\w\-]+\.)*instagram\.com/([\w\-./?=&]+)',
+            'url_pattern': r'https?://([\w\-]+\.)*instagram\.com/([^\s]*)',
             'new_domain': 'ddinstagram.com'
         },
         {
-            'url_pattern': r'https?://([\w\-]+\.)*x\.com/([\w\-./?=&]+)',
+            'url_pattern': r'https?://([\w\-]+\.)*x\.com/([^\s]*)',
             'new_domain': 'vxtwitter.com'
         },
         {
-            'url_pattern': r'https?://([\w\-]+\.)*twitter\.com/([\w\-./?=&]+)',
+            'url_pattern': r'https?://([\w\-]+\.)*twitter\.com/([^\s]*)',
             'new_domain': 'vxtwitter.com'
         }
         # TODO check on adding vxReddit (currently broken by Discord)
