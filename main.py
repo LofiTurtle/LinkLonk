@@ -84,8 +84,11 @@ def convert_all_urls(message_content: str) -> list[str]:
         {
             'url_pattern': r'https?://([\w\-]+\.)*twitter\.com/([^\s]*)',
             'new_domain': 'vxtwitter.com'
+        },
+        {
+            'url_pattern': r'https?://([\w\-]+\.)*reddit\.com/([^\s]*)',
+            'new_domain': 'vxreddit.com'
         }
-        # TODO check on adding vxReddit (currently broken by Discord)
     ]
     for url_conversion in url_conversions:
         new_urls.extend(convert_url(message_content=message_content, **url_conversion))

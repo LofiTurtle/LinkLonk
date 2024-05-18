@@ -20,7 +20,7 @@ def save_db(guild: discord.Guild, data: dict) -> None:
 
 def _load_db():
     # load the entire db.json
-    if not os.path.isfile('db.json'):
+    if not os.path.isfile('storage/db.json'):
         with open('storage/db.json', 'w') as db:
             db.write(json.dumps({}))
     with open('storage/db.json', 'r') as db:
