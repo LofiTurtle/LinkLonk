@@ -4,6 +4,9 @@ import discord
 import json
 
 
+DB_NAME = 'storage/db.json'
+
+
 def load_db(guild: discord.Guild) -> dict:
     # return this guild's entry in db.json
     db = _load_db()
@@ -13,17 +16,17 @@ def load_db(guild: discord.Guild) -> dict:
 
 def save_db(guild: discord.Guild, data: dict) -> None:
     current_db = _load_db()
-    with open('storage/db.json', 'w') as db:
+    with open(DB_NAME, 'w') as db:
         current_db[str(guild.id)] = data
         json.dump(current_db, db)
 
 
 def _load_db():
     # load the entire db.json
-    if not os.path.isfile('storage/db.json'):
-        with open('storage/db.json', 'w') as db:
+    if not os.path.isfile(DB_NAME):
+        with open(DB_NAME, 'w') as db:
             db.write(json.dumps({}))
-    with open('storage/db.json', 'r') as db:
+    with open(DB_NAME, 'r') as db:
         return json.load(db)
 
 
