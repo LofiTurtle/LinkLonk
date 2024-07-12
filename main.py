@@ -1,3 +1,5 @@
+import time
+
 from discord.ext import commands
 import discord
 from dotenv import load_dotenv
@@ -64,6 +66,10 @@ async def on_message(message: discord.Message):
             (f'Beep boop, embed{"s" if len(current_url_batch) > 1 else ""} incoming\n' if first_response else '')
             + '\n'.join(current_url_batch))
         await message.reply(response_message, mention_author=False)
+
+    # Sometimes embeds take a while to show up, suppress them again after a delay just in case
+    time.sleep(5)
+    await message.edit(suppress=True)
 
 
 def convert_all_urls(message_content: str) -> list[str]:
