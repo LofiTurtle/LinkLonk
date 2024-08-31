@@ -1,10 +1,10 @@
-import time
-
-from discord.ext import commands
-import discord
-from dotenv import load_dotenv
+import asyncio
 import os
 import re
+
+import discord
+from discord.ext import commands
+from dotenv import load_dotenv
 
 from dbutils import load_db, save_db
 
@@ -22,6 +22,21 @@ bot = commands.Bot(intents=intents)
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
+
+
+async def reply_with_retry(message: discord.Message, message_contents: str, delay: int = 10):
+    """Replies, resending message if embeds time out the first time. This can happen when vxtiktok and similar servers
+    are slow and take too long to generate embeds that are not already cached."""
+    reply = await message.reply(message_contents, mention_author=False)
+
+    await asyncio.sleep(delay)
+
+    # Update reply message and check for embeds, resending if none are found. Only try once, because sometimes services
+    # are just unavailable
+    reply = await reply.channel.fetch_message(reply.id)
+    if not reply.embeds:
+        await reply.delete()
+        await message.reply(message_contents, mention_author=False)
 
 
 @bot.event
@@ -55,7 +70,8 @@ async def on_message(message: discord.Message):
             # send batch of 5 messages
             response_message = ('Beep boop, embeds incoming\n' if first_response else '') + '\n'.join(
                 current_url_batch)
-            await message.reply(response_message, mention_author=False)
+            await reply_with_retry(message, response_message)
+            # await message.reply(response_message, mention_author=False)
             first_response = False
             # clear the list batch and append next url
             current_url_batch = [url]
@@ -65,10 +81,11 @@ async def on_message(message: discord.Message):
         response_message = (
             (f'Beep boop, embed{"s" if len(current_url_batch) > 1 else ""} incoming\n' if first_response else '')
             + '\n'.join(current_url_batch))
-        await message.reply(response_message, mention_author=False)
+        await reply_with_retry(message, response_message)
+        # await message.reply(response_message, mention_author=False)
 
-    # Sometimes embeds take a while to show up, suppress them again after a delay just in case
-    time.sleep(5)
+    # Sometimes embeds take a while to show up, suppress original message again after a delay just in case
+    await asyncio.sleep(5)
     await message.edit(suppress=True)
 
 
