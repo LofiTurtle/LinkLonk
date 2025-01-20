@@ -39,7 +39,14 @@ async def reply_with_retry(message: discord.Message, message_contents: str, dela
     reply = await reply.channel.fetch_message(reply.id)
     if not reply.embeds:
         await reply.delete()
-        await message.reply(message_contents, mention_author=False)
+        reply = await message.reply(message_contents, mention_author=False)
+
+    await asyncio.sleep(delay)
+
+    reply = await reply.channel.fetch_message(reply.id)
+    if not reply.embeds:
+        # embed failed, remove the message to not clutter the channel
+        await reply.delete()
 
 
 @bot.event
@@ -125,14 +132,18 @@ def convert_all_urls(message_content: str) -> list[str]:
 
 
 def convert_xhs_url(url: str) -> str:
+    # /discovery/item/ urls don't embed for some reason, but /explore/ urls do
+    url = url.replace('/discovery/item/', '/explore/')
+
     parsed = urlparse(url)
-    params = parse_qs(parsed.query)
+    params = parsed.query.split('&')
+    xsec_token = None
 
-    if 'xsec_token' not in params:
-        raise ValueError(f'No xsec_token in XHS url: {url}')
-
-    new_query = urlencode({'xsec_token': params['xsec_token']}, doseq=True)
-    return f'{parsed.scheme}://{parsed.netloc}{parsed.path}?{new_query}'
+    for param in params:
+        if 'xsec_token' in param:
+            xsec_token = param
+            break
+    return f'{parsed.scheme}://{parsed.netloc}{parsed.path}?{xsec_token}'
 
 
 def convert_url(message_content: str, url_pattern: str, new_domain: str) -> list[str]:
@@ -142,7 +153,7 @@ def convert_url(message_content: str, url_pattern: str, new_domain: str) -> list
     if 'xhslink' in url_pattern:
         # xiaohongshu links just need to have redirects resolved / query parameters removed
         for subdomain, path in urls:
-            original_url = f'http://{subdomain}.xhslink.com/{path}'
+            original_url = f'http://{subdomain}xhslink.com/{path}'
             response = requests.get(original_url, allow_redirects=False)
             if response.status_code == 307:
                 redirect_url = response.headers['Location']
