@@ -1,6 +1,9 @@
 import asyncio
 import os
 import re
+from urllib.parse import urlparse, parse_qs, urlencode
+
+import requests
 
 import discord
 from discord.ext import commands
@@ -71,7 +74,6 @@ async def on_message(message: discord.Message):
             response_message = ('Beep boop, embeds incoming\n' if first_response else '') + '\n'.join(
                 current_url_batch)
             await reply_with_retry(message, response_message)
-            # await message.reply(response_message, mention_author=False)
             first_response = False
             # clear the list batch and append next url
             current_url_batch = [url]
@@ -82,7 +84,6 @@ async def on_message(message: discord.Message):
             (f'Beep boop, embed{"s" if len(current_url_batch) > 1 else ""} incoming\n' if first_response else '')
             + '\n'.join(current_url_batch))
         await reply_with_retry(message, response_message)
-        # await message.reply(response_message, mention_author=False)
 
     # Sometimes embeds take a while to show up, suppress original message again after a delay just in case
     await asyncio.sleep(5)
@@ -111,6 +112,10 @@ def convert_all_urls(message_content: str) -> list[str]:
         {
             'url_pattern': r'https?://([\w\-]+\.)*reddit\.com/([^\s]*)',
             'new_domain': 'vxreddit.com'
+        },
+        {
+            'url_pattern': r'https?://([\w\-]+\.)*xhslink\.com/([^\s]*)',
+            'new_domain': None
         }
     ]
     for url_conversion in url_conversions:
@@ -119,13 +124,36 @@ def convert_all_urls(message_content: str) -> list[str]:
     return new_urls
 
 
+def convert_xhs_url(url: str) -> str:
+    parsed = urlparse(url)
+    params = parse_qs(parsed.query)
+
+    if 'xsec_token' not in params:
+        raise ValueError(f'No xsec_token in XHS url: {url}')
+
+    new_query = urlencode({'xsec_token': params['xsec_token']}, doseq=True)
+    return f'{parsed.scheme}://{parsed.netloc}{parsed.path}?{new_query}'
+
+
 def convert_url(message_content: str, url_pattern: str, new_domain: str) -> list[str]:
     urls = re.findall(url_pattern, message_content)
     new_urls: list[str] = []
 
-    for subdomain, path, in urls:
-        new_url = f'https://{subdomain}{new_domain}/{path}'
-        new_urls.append(new_url)
+    if 'xhslink' in url_pattern:
+        # xiaohongshu links just need to have redirects resolved / query parameters removed
+        for subdomain, path in urls:
+            original_url = f'http://{subdomain}.xhslink.com/{path}'
+            response = requests.get(original_url, allow_redirects=False)
+            if response.status_code == 307:
+                redirect_url = response.headers['Location']
+            else:
+                print(f'Unexpected XHS response code: {response.status_code}')
+                continue
+            new_urls.append(convert_xhs_url(redirect_url))
+    else:
+        for subdomain, path, in urls:
+            new_url = f'https://{subdomain}{new_domain}/{path}'
+            new_urls.append(new_url)
 
     return new_urls
 
