@@ -106,7 +106,7 @@ def convert_all_urls(message_content: str) -> list[str]:
         },
         {
             'url_pattern': r'https?://([\w\-]+\.)*instagram\.com/([^\s]*)',
-            'new_domain': 'ddinstagram.com'
+            'new_domain': 'kkinstagram.com'
         },
         {
             'url_pattern': r'https?://([\w\-]+\.)*x\.com/([^\s]*)',
