@@ -102,7 +102,7 @@ def convert_all_urls(message_content: str) -> list[str]:
     url_conversions: list[dict] = [
         {
             'url_pattern': r'https?://([\w\-]+\.)*tiktok\.com/([^\s]*)',
-            'new_domain': 'vxtiktok.com'
+            'new_domain': 'kktiktok.com'
         },
         {
             'url_pattern': r'https?://([\w\-]+\.)*instagram\.com/([^\s]*)',
